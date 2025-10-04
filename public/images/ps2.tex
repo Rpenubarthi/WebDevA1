@@ -1,0 +1,170 @@
+%me=0 student solutions, me=1 - my solutions, me=2 - assignment
+\def\me{2}
+\def\num{2}  %homework number
+\def\due{Sept 18, 2024}  %due date
+\def\course{CS 3950} %course name
+\def\name{Student Name}
+%
+\iffalse
+
+\fi
+%
+\documentclass[11pt]{article}
+\usepackage{amsfonts}
+\usepackage{latexsym}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+
+\newcommand{\handout}[5]{
+   \renewcommand{\thepage}{#1, Page \arabic{page}}
+   \noindent
+   \begin{center}
+   \framebox{
+      \vbox{
+    \hbox to 5.78in { {\bf \course} \hfill #2 }
+       \vspace{4mm}
+       \hbox to 5.78in { {\Large \hfill #5  \hfill} }
+       \vspace{2mm}
+       \hbox to 5.78in { {\it #3 \hfill #4} }
+      }
+   }
+   \end{center}
+   \vspace*{4mm}
+}
+
+\newcounter{pppp}
+\newcommand{\prob}{\arabic{pppp}}  %problem number
+\newcommand{\increase}{\addtocounter{pppp}{1}}  %problem number
+
+\newcommand{\newproblem}[2]{\increase
+\section*{Problem \prob~(#1) \hfill {#2}}}
+
+
+\def\squarebox#1{\hbox to #1{\hfill\vbox to #1{\vfill}}}
+\def\qed{\hspace*{\fill}
+        \vbox{\hrule\hbox{\vrule\squarebox{.667em}\vrule}\hrule}}
+\newenvironment{solution}{\begin{trivlist}\item[]{\bf Solution:}}
+                      {\qed \end{trivlist}}
+\newenvironment{solsketch}{\begin{trivlist}\item[]{\bf Solution Sketch:}}
+                      {\qed \end{trivlist}}
+\newenvironment{code}{\begin{tabbing}
+12345\=12345\=12345\=12345\=12345\=12345\=12345\=12345\= \kill }
+{\end{tabbing}}
+
+\newcommand{\eqref}[1]{Equation~(\ref{eq:#1})}
+
+\newcommand{\hint}[1]{({\bf Hint}: {#1})}
+%Put more macros here, as needed.
+\newcommand{\room}{\medskip\ni}
+\newcommand{\brak}[1]{\langle #1 \rangle}
+\newcommand{\bit}{\{0,1\}}
+\newcommand{\zo}{\{0,1\}}
+\newcommand{\mod}{\mathsf{~mod~}}
+
+\newcommand {\eps} {\varepsilon}
+
+\newcommand{\nin}{\not\in}
+\newcommand{\set}[1]{\{#1\}}
+\renewcommand{\ni}{\noindent}
+\renewcommand{\gets}{\leftarrow}
+\renewcommand{\to}{\rightarrow}
+\newcommand{\assign}{:=}
+
+\newcommand{\AND}{\wedge}
+\newcommand{\OR}{\vee}
+
+\newcommand{\For}{\mbox{\bf For }}
+\newcommand{\To}{\mbox{\bf to }}
+\newcommand{\Do}{\mbox{\bf Do }}
+\newcommand{\If}{\mbox{\bf If }}
+\newcommand{\Then}{\mbox{\bf Then }}
+\newcommand{\Else}{\mbox{\bf Else }}
+\newcommand{\While}{\mbox{\bf While }}
+\newcommand{\Repeat}{\mbox{\bf Repeat }}
+\newcommand{\Until}{\mbox{\bf Until }}
+\newcommand{\Return}{\mbox{\bf Return }}
+
+\newcommand{\Enc}{\mathsf{Enc}}
+\newcommand{\Dec}{\mathsf{Dec}}
+\newcommand{\KeyGen}{\mathsf{KeyGen}}
+\newcommand{\MAC}{\mathsf{MAC}}
+\newcommand{\negl}{\mathsf{negl}}
+
+\newcommand {\A} {\mathcal{A}}
+\newcommand {\K} {\mathcal{K}}
+\newcommand {\C} {\mathcal{C}}
+\newcommand {\M} {\mathcal{M}}
+\newcommand {\T} {\mathcal{T}}
+\newcommand {\U} {\mathcal{U}}
+\newcommand {\V} {\mathcal{V}}
+
+
+\newcommand {\ZZ} {\mathbb{Z}}
+\newcommand {\FF} {\mathbb{F}}
+\newcommand {\NN} {\mathbb{N}}
+\newcommand {\RR} {\mathbb{R}}
+
+\newcommand {\AO}{\mathsf{AltOneSec}_A}
+\newcommand {\OS}{\mathsf{OneSec}}
+\newcommand{\Ta}{\mathsf{a}}
+\newcommand{\Tb}{\mathsf{b}}
+\newcommand {\DFA}{\texttt{DFA~}}
+
+\def \SD {\mathsf{SD}}
+\def \hinf {H_{\infty}}
+
+\def \poly {\mathsf{poly}}
+
+\begin{document}
+
+\ifnum\me=0
+\handout{PS\num}{\today}{Name: Ariel Hamlin}{Due: \due}{Solutions to Problem Set \num}
+
+\fi
+\ifnum\me=1
+\handout{PS\num}{\today}{Name: Ariel Hamlin}{Due: \due}{Solution {\em Sketches} to Problem Set \num}
+\fi
+\ifnum\me=2
+\handout{PS\num}{\today}{Lecturer:  Ariel Hamlin}{Due: \due}{Homework \num}
+\fi
+
+\textbf{Instructions:}
+\begin{itemize}
+\item The assignment has to be uploaded to Gradescope by the start of class. 
+\item  \textit{You must write up your own solutions, in your own words.} 
+\item You must turn in \textit{neat} work to Gradescope either written in a word processor such as Word, or typeset in LaTeX.
+\end{itemize}
+
+\newproblem{3 Passes}{20 pts}
+
+For the paper ``Examining Teamwork: Evaluating Individual Contributions in
+Collaborative Software Engineering Projects'', complete the three passes as we discussed in class. 
+
+\begin{enumerate}
+\item After the first pass answer the 5 `c' questions proposed in Keshev's paper.
+\item After the second pass answer the following prompts:
+\begin{enumerate}
+\item Summarize the contributions and provide supporting evidence
+\item Is the research problem significant? And is the contribution significant?
+\item What are some of the strengths and weaknesses as presented by the authors of their contributions?
+\item What are the open problems as identified by the authors?
+\end{enumerate}
+\item After a third pass, answer the following prompts:
+\begin{enumerate}
+\item What are one or two things you would want to do to follow up this research? This cannot be something the authors have already suggested
+\item What are follow up reading would you want to do to better understand this area?
+
+\end{enumerate}
+\end{enumerate}
+
+
+\end{document}
+
+
+
+ 
+\end{document} 
+
+
