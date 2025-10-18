@@ -1,13 +1,19 @@
+"use client"
+import { useParams } from "next/navigation";
+import * as db from "../../../Database";
 import ModulesControls from "@/app/(Kambaz)/Courses/[cid]/Modules/ModulesControls";
 import { ListGroup, ListGroupItem } from "react-bootstrap";
 import { BsGripVertical } from "react-icons/bs";
 import LessonControlButtons from "./LessonControlButtons";
 
 export default function Modules() {
+    const { cid } = useParams();
+    const modules = db.modules;
     return (
         <div>
             <ModulesControls /><br /><br /><br /><br />
             <ListGroup className="rounded-0" id="wd-modules">
+
                 <ListGroupItem className="wd-module p-0 mb-5 fs-5 border-gray">
                     <div className="wd-title p-3 ps-2 bg-secondary"> Week 1 </div>
                     <ListGroup className="wd-lessons rounded-0">
