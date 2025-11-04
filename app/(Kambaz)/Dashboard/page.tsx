@@ -1,11 +1,14 @@
 "use client";
-
+import { useState } from "react";
 import Link from "next/link";
 import { Container, Row, Col, Card, CardBody, CardTitle, CardText, CardImg } from "react-bootstrap";
+import { v4 as uuidv4 } from "uuid";
+
 import * as db from "../Database";
 
 export default function Dashboard() {
-    const courses = db.courses;
+    const [courses, setCourses] = useState<any[]>(db.courses);
+
 
     return (
         <Container fluid className="ms-md-5" style={{ marginLeft: "150px" }}>
