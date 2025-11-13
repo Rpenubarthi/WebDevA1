@@ -1,11 +1,11 @@
+"use client";
+
 import { useState } from "react";
-import { ListGroup, Button, Form } from "react-bootstrap";
+import { ListGroup } from "react-bootstrap";
 import TodoForm from "./TodoForm";
 import TodoItem from "./TodoItem";
 import { useSelector } from "react-redux";
-import { todo } from "node:test";
-import { RootState } from "../../store";
-import { setTodo, addTodo, updateTodo, deleteTodo } from "./todosReducer";
+import type { RootState } from "../../store";
 
 
 
@@ -21,8 +21,8 @@ export default function TodoList() {
 
       <ListGroup>
         <TodoForm />
-        {todos.map((todo: any) => (
-          <TodoItem todo={todo} />
+        {todos.map((todo) => (
+          <TodoItem key={todo.id} todo={todo} />
 
         ))}
 

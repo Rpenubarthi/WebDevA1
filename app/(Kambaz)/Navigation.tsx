@@ -14,7 +14,7 @@ export default function Navigation() {
     const links = [
         { label: "Account", path: "/Account", icon: FaRegCircleUser },
         { label: "Dashboard", path: "/Dashboard", icon: AiOutlineDashboard },
-        { label: "Courses", path: "/Dashboard", icon: LiaBookSolid },
+        { label: "Courses", path: "", icon: LiaBookSolid },
         { label: "Calendar", path: "/Calendar", icon: IoCalendarOutline },
         { label: "Inbox", path: "/Inbox", icon: FaInbox },
         { label: "Labs", path: "/Labs", icon: LiaCogSolid },
