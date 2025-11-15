@@ -33,8 +33,6 @@ export default function TOC() {
             <NavItem>
                 <NavLink href="/" as={Link}>
                     Kambaz </NavLink> </NavItem>
-            <NavItem>
-                <NavLink href="https://github.com/jannunzi">My GitHub</NavLink></NavItem>
         </Nav>
     );
 }

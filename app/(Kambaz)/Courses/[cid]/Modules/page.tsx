@@ -1,14 +1,52 @@
 "use client"
+/* eslint-disable */
 import { useParams } from "next/navigation";
 import * as db from "../../../Database";
 import ModulesControls from "@/app/(Kambaz)/Courses/[cid]/Modules/ModulesControls";
 import { ListGroup, ListGroupItem } from "react-bootstrap";
 import { BsGripVertical } from "react-icons/bs";
 import LessonControlButtons from "./LessonControlButtons";
+import { useState, useEffect } from "react";
+import { setModules, addModule, editModule, updateModule, deleteModule } from "./reducer";
+import * as client from "../../client";
+import { useDispatch, useSelector } from "react-redux";
+import ModuleControlButtons from "./ModuleControlButtons";
+import { v4 as uuidv4 } from "uuid";
+
 
 export default function Modules() {
     const { cid } = useParams();
-    const modules = db.modules;
+    const { modules } = useSelector((state: any) => state.modulesReducer);
+    const dispatch = useDispatch();
+    const fetchModules = async () => {
+        const modules = await client.findModulesForCourse(cid as string);
+        dispatch(setModules(modules));
+    };
+    useEffect(() => {
+        fetchModules();
+    }, []);
+    const [moduleName, setModuleName] = useState("");
+    const addModule = () => {
+        setModules([...modules, { _id: uuidv4(), name: moduleName, course: cid, lessons: [] }]);
+        setModuleName("");
+    };
+
+
+    // const onCreateModuleForCourse = async () => {
+    //     if (!cid) return;
+    //     const newModule = { name: moduleName, course: cid };
+    //     const module = await client.createModuleForCourse(cid, newModule);
+    //     dispatch(setModules([...modules, module]));
+    // };
+    const onRemoveModule = async (moduleId: string) => {
+        await client.deleteModule(moduleId);
+        dispatch(setModules(modules.filter((m: any) => m._id !== moduleId)));
+    };
+    // const onUpdateModule = async (module: any) => {
+    //     await client.updateModule(module);
+    //     const newModules = modules.map((m: any) => m._id === module._id ? module : m);
+    //     dispatch(setModules(newModules));
+    // };
     return (
         <div>
             <ModulesControls /><br /><br /><br /><br />

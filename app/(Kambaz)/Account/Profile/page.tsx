@@ -16,7 +16,8 @@ export default function Profile() {
         if (!currentUser) return redirect("/Account/Signin");
         setProfile(currentUser);
     };
-    const signout = () => {
+    const signout = async () => {
+        await client.signout();
         dispatch(setCurrentUser(null));
         redirect("/Account/Signin");
     };
