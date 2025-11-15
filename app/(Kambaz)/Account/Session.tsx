@@ -1,3 +1,4 @@
+/* eslint-disable */
 import * as client from "./client";
 import { useEffect, useState } from "react";
 import { setCurrentUser } from "./reducer";
