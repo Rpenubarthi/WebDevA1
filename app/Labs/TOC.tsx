@@ -7,6 +7,12 @@ export default function TOC() {
     return (
         <Nav variant="pills">
             <NavItem>
+                <NavLink href="https://github.com/Rpenubarthi/kambaz-node-server-app" as={Link} >
+                    Node Server Github </NavLink> </NavItem>
+            <NavItem>
+                <NavLink href="https://kambaz-node-server-app-dkh7.onrender.com" as={Link} >
+                    Render </NavLink> </NavItem>
+            <NavItem>
                 <NavLink href="/Labs" as={Link} className={`nav-link ${pathname.endsWith("Labs") ? "active" : ""}`}>
                     Labs </NavLink> </NavItem>
             <NavItem>
