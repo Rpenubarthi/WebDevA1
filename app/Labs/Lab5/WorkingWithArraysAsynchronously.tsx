@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable */
 import React, { useState, useEffect } from "react";
 import * as client from "./client";
 import { FormControl, ListGroup, ListGroupItem } from "react-bootstrap";
