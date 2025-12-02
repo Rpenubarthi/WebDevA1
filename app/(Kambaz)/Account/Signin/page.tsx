@@ -14,7 +14,9 @@ export default function Signin() {
         const user = await client.signin(credentials);
         if (!user) return;
         setCurrentUser(user);
+        await client.profile();
         router.push("/Dashboard");
+
     };
 
     return (
