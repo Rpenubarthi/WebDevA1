@@ -10,13 +10,12 @@ export default function Signin() {
     const [credentials, setCredentials] = useState<any>({ username: "", password: "" });
     const [currentUser, setCurrentUser] = useState<any>();
     const router = useRouter();
-    const delay = (ms: any) => new Promise((res) => setTimeout(res, ms));
     const signin = async () => {
         const user = await client.signin(credentials);
         if (!user) return;
         setCurrentUser(user);
+        router.refresh();
         router.push("/Dashboard");
-        await delay(500);
         router.refresh();
     };
 

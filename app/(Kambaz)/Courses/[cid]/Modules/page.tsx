@@ -32,21 +32,25 @@ export default function Modules() {
     };
 
 
-    // const onCreateModuleForCourse = async () => {
-    //     if (!cid) return;
-    //     const newModule = { name: moduleName, course: cid };
-    //     const module = await client.createModuleForCourse(cid, newModule);
-    //     dispatch(setModules([...modules, module]));
-    // };
+    const onCreateModuleForCourse = async () => {
+        if (!cid) return;
+        const newModule = { name: moduleName, course: cid };
+        const module = await client.createModuleForCourse((cid || "").toString(), newModule);
+        dispatch(setModules([...modules, module]));
+    };
     const onRemoveModule = async (moduleId: string) => {
-        await client.deleteModule(moduleId);
+        await client.deleteModule((cid || "").toString(), moduleId);
         dispatch(setModules(modules.filter((m: any) => m._id !== moduleId)));
     };
-    // const onUpdateModule = async (module: any) => {
-    //     await client.updateModule(module);
-    //     const newModules = modules.map((m: any) => m._id === module._id ? module : m);
-    //     dispatch(setModules(newModules));
-    // };
+    const onUpdateModule = async (module: any) => {
+        await client.updateModule((cid || "").toString(), module);
+        const newModules = modules.map((m: any) =>
+            m._id === module._id ? module : m
+        );
+        dispatch(setModules(newModules));
+    };
+
+
     return (
         <div>
             <ModulesControls /><br /><br /><br /><br />
