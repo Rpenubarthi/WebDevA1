@@ -1,13 +1,18 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../../store';
 import PazzaNavBar from '../PazzaNavBar';
+import * as PazzaClient from '../client';
+import * as FolderClient from '../client';
+import * as CourseClient from '../../../../Courses/client';
 
 export default function NewPostPage({ params }: { params: Promise<{ cid: string }> }) {
   const router = useRouter();
-  const { cid } = use(params); // Unwrap the Promise
-  
+  const { cid } = use(params);
+
   const [postType, setPostType] = useState<'question' | 'note'>('question');
   const [postTo, setPostTo] = useState<'entire_class' | 'individual'>('entire_class');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -15,15 +20,79 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
   const [summary, setSummary] = useState('');
   const [details, setDetails] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [availableFolders, setAvailableFolders] = useState<string[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
-  const availableFolders = ['hw1', 'hw2', 'hw3', 'project', 'exam', 'logistics', 'other', 'office_hours'];
-  
-  const availableUsers = [
-    { id: '1', name: 'Instructors', role: 'instructor' },
-    { id: '2', name: 'John Doe', role: 'student' },
-    { id: '3', name: 'Jane Smith', role: 'student' },
-    { id: '4', name: 'Bob Johnson', role: 'student' }
-  ];
+  // Get current user from Redux
+  const { currentUser } = useSelector((state: RootState) => state.accountReducer);
+
+  // Fetch folders for this course
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const folders = await FolderClient.getFoldersByCourse(cid);
+        const folderNames = folders.map((f: any) => f.name);
+        setAvailableFolders(folderNames.length > 0 ? folderNames : ['hw1', 'hw2', 'hw3', 'project', 'exam', 'logistics', 'other', 'office_hours']);
+      } catch (error) {
+        console.error('Error fetching folders:', error);
+        setAvailableFolders(['hw1', 'hw2', 'hw3', 'project', 'exam', 'logistics', 'other', 'office_hours']);
+      }
+    };
+    fetchFolders();
+  }, [cid]);
+
+  // Fetch users for this course when "individual" is selected
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (postTo !== 'individual') return;
+
+      try {
+        setLoadingUsers(true);
+        const users = await CourseClient.findUsersForCourse(cid);
+
+        // Separate instructors and students
+        const instructors = users.filter((u: any) => u.role === 'FACULTY');
+        const students = users.filter((u: any) => u.role === 'STUDENT');
+
+        // Format users for display
+        const formattedUsers = [
+          // Add "All Instructors" group option if there are any instructors
+          ...(instructors.length > 0 ? [{
+            id: 'all-instructors',
+            name: 'All Instructors',
+            role: 'instructor',
+            isGroup: true,
+            userIds: instructors.map((i: any) => i._id)
+          }] : []),
+          // Add individual instructors
+          ...instructors.map((u: any) => ({
+            id: u._id,
+            name: `${u.firstName} ${u.lastName}`.trim() || u.username,
+            role: 'instructor',
+            isGroup: false
+          })),
+          // Add individual students
+          ...students.map((u: any) => ({
+            id: u._id,
+            name: `${u.firstName} ${u.lastName}`.trim() || u.username,
+            role: 'student',
+            isGroup: false
+          }))
+        ];
+
+        setAvailableUsers(formattedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setAvailableUsers([]);
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, [cid, postTo]);
 
   const handleFolderToggle = (folder: string) => {
     if (selectedFolders.includes(folder)) {
@@ -34,34 +103,52 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
   };
 
   const handleUserToggle = (userId: string) => {
-    if (selectedUsers.includes(userId)) {
-      setSelectedUsers(selectedUsers.filter(u => u !== userId));
+    const user = availableUsers.find(u => u.id === userId);
+
+    // Handle "All Instructors" group selection
+    if (user?.isGroup) {
+      const allInstructorIds = user.userIds;
+      const allSelected = allInstructorIds.every((id: string) => selectedUsers.includes(id));
+
+      if (allSelected) {
+        // Deselect all instructors
+        setSelectedUsers(selectedUsers.filter(id => !allInstructorIds.includes(id)));
+      } else {
+        // Select all instructors
+        const newSelection = [...new Set([...selectedUsers, ...allInstructorIds])];
+        setSelectedUsers(newSelection);
+      }
     } else {
-      setSelectedUsers([...selectedUsers, userId]);
+      // Handle individual user selection
+      if (selectedUsers.includes(userId)) {
+        setSelectedUsers(selectedUsers.filter(u => u !== userId));
+      } else {
+        setSelectedUsers([...selectedUsers, userId]);
+      }
     }
   };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    
+
     if (!summary.trim()) {
       newErrors.summary = 'Summary is required';
     } else if (summary.length > 100) {
       newErrors.summary = 'Summary must be 100 characters or less';
     }
-    
+
     if (!details.trim()) {
       newErrors.details = 'Details are required';
     }
-    
+
     if (selectedFolders.length === 0) {
       newErrors.folders = 'At least one folder is required';
     }
-    
+
     if (postTo === 'individual' && selectedUsers.length === 0) {
       newErrors.users = 'At least one user must be selected';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -71,11 +158,20 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
       return;
     }
 
+    if (!currentUser) {
+      alert('You must be logged in to create a post');
+      return;
+    }
+
+    setLoading(true);
+
     const postData = {
-      courseId: cid, // Use the unwrapped cid
+      courseId: cid,
       type: postType,
       summary,
       details,
+      authorId: (currentUser as any)._id,
+      authorRole: (currentUser as any).role === 'FACULTY' ? 'instructor' : 'student',
       visibility: {
         type: postTo,
         visibleTo: postTo === 'individual' ? selectedUsers : []
@@ -84,24 +180,21 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
     };
 
     try {
-      // TODO: Send to backend
-      // const response = await fetch('http://localhost:4000/api/pazza/posts', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(postData)
-      // });
-      
-      console.log('Creating post:', postData);
-      
-      // Navigate back to main Pazza page
-      router.push(`/Kambaz/Courses/${cid}/Pazza`);
+      await PazzaClient.createPost(cid, postData);
+      console.log('Post created successfully!');
+
+      router.push(`/Courses/${cid}/Pazza`);
+      router.refresh();
     } catch (error) {
       console.error('Error creating post:', error);
+      alert('Failed to create post. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCancel = () => {
-    router.push(`/Kambaz/Courses/${cid}/Pazza`);
+    router.push(`/Courses/${cid}/Pazza`);
   };
 
   return (
@@ -112,8 +205,7 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
       width: '100%'
     }}>
       <PazzaNavBar courseId={cid} />
-      
-      {/* ... rest of your JSX stays the same ... */}
+
       <div style={{
         flex: 1,
         overflowY: 'auto',
@@ -184,7 +276,7 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
               fontWeight: '600',
               marginBottom: '8px'
             }}>
-              Post To
+              Post To (Who can see this?)
             </label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -194,7 +286,7 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
                   checked={postTo === 'entire_class'}
                   onChange={() => setPostTo('entire_class')}
                 />
-                <span>Entire Class</span>
+                <span>Entire Class (everyone can see)</span>
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <input
@@ -203,39 +295,55 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
                   checked={postTo === 'individual'}
                   onChange={() => setPostTo('individual')}
                 />
-                <span>Individual Students/Instructors</span>
+                <span>Individual Students/Instructors (only selected people can see)</span>
               </label>
             </div>
 
-            {/* User Selection (only if individual is selected) */}
+            {/* User Selection */}
             {postTo === 'individual' && (
               <div style={{
                 marginTop: '12px',
                 padding: '12px',
-                backgroundColor: '#f9fafb',
+                backgroundColor: '#ffffffff',
                 borderRadius: '4px',
-                border: '1px solid #e5e7eb'
+                border: '1px solid #000000ff'
               }}>
-                <div style={{ fontWeight: '600', marginBottom: '8px', fontSize: '14px' }}>
-                  Select Users:
-                </div>
-                {availableUsers.map(user => (
-                  <label key={user.id} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    marginBottom: '6px'
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(user.id)}
-                      onChange={() => handleUserToggle(user.id)}
-                    />
-                    <span style={{ fontSize: '14px' }}>
-                      {user.name} {user.role === 'instructor' && '(Instructor)'}
-                    </span>
-                  </label>
-                ))}
+
+                {loadingUsers ? (
+                  <div style={{ padding: '8px', textAlign: 'center', color: '#6b7280' }}>
+                    Loading users...
+                  </div>
+                ) : availableUsers.length === 0 ? (
+                  <div style={{ padding: '8px', color: '#6b7280' }}>
+                    No users found in this course.
+                  </div>
+                ) : (
+                  availableUsers.map(user => {
+                    const isChecked = user.isGroup
+                      ? user.userIds.every((id: string) => selectedUsers.includes(id))
+                      : selectedUsers.includes(user.id);
+
+                    return (
+                      <label key={user.id} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        marginBottom: '6px',
+                        fontWeight: user.isGroup ? '600' : 'normal'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleUserToggle(user.id)}
+                        />
+                        <span style={{ fontSize: '14px' }}>
+                          {user.name} {user.role === 'instructor' && !user.isGroup && '(Instructor)'}
+                        </span>
+                      </label>
+                    );
+                  })
+                )}
+
                 {errors.users && (
                   <div style={{ color: '#dc2626', fontSize: '14px', marginTop: '4px' }}>
                     {errors.users}
@@ -375,31 +483,35 @@ export default function NewPostPage({ params }: { params: Promise<{ cid: string 
           }}>
             <button
               onClick={handleCancel}
+              disabled={loading}
               style={{
                 padding: '10px 20px',
                 border: '1px solid #d1d5db',
                 borderRadius: '4px',
                 backgroundColor: 'white',
                 color: '#374151',
-                cursor: 'pointer',
-                fontWeight: '500'
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                opacity: loading ? 0.5 : 1
               }}
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
+              disabled={loading}
               style={{
                 padding: '10px 20px',
                 border: 'none',
                 borderRadius: '4px',
                 backgroundColor: '#2563eb',
                 color: 'white',
-                cursor: 'pointer',
-                fontWeight: '600'
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontWeight: '600',
+                opacity: loading ? 0.5 : 1
               }}
             >
-              Post My {postType === 'question' ? 'Question' : 'Note'}
+              {loading ? 'Posting...' : `Post My ${postType === 'question' ? 'Question' : 'Note'}`}
             </button>
           </div>
         </div>

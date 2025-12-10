@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import * as PazzaClient from './client';
+import { RootState } from '../../../store';
+import { useSelector } from 'react-redux';
 
 interface Post {
   _id: string;
@@ -21,21 +23,25 @@ interface PostsListProps {
   onToggle: () => void;
 }
 
-export default function PostsList({ 
-  courseId, 
-  selectedFolder, 
-  selectedPost, 
+export default function PostsList({
+  courseId,
+  selectedFolder,
+  selectedPost,
   onPostSelect,
-  onToggle 
+  onToggle
 }: PostsListProps) {
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['Today', 'Yesterday']));
 
-  // TODO: Get current user from auth context
-  const currentUser = { id: '1', role: 'student' };
+  const accountState = useSelector((state: RootState) => state.accountReducer);
+  const currentUser = {
+    id: (accountState as any)?.currentUser?._id || '1',
+    role: (accountState as any)?.currentUser?.role === 'FACULTY' ? 'instructor' : 'student'
+  };
 
   useEffect(() => {
     console.log('PostsList mounted with courseId:', courseId, 'folder:', selectedFolder);
@@ -46,7 +52,7 @@ export default function PostsList({
     try {
       setLoading(true);
       setError(null);
-      
+
       console.log('Fetching posts for:', {
         courseId,
         userId: currentUser.id,
@@ -61,7 +67,7 @@ export default function PostsList({
         selectedFolder === 'all' ? undefined : selectedFolder,
         searchTerm || undefined
       );
-      
+
       console.log('Fetched posts:', fetchedPosts);
       setPosts(fetchedPosts);
     } catch (error: any) {
@@ -82,36 +88,85 @@ export default function PostsList({
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
-  const filteredPosts = searchTerm 
-    ? posts 
-    : posts.filter(post => 
-        post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.details.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const toggleCategory = (category: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(category)) {
+      newExpanded.delete(category);
+    } else {
+      newExpanded.add(category);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  const getWeekRange = (date: Date) => {
+    const day = date.getDay();
+    const diff = date.getDate() - day; // Get Sunday of the week
+
+    const sunday = new Date(date);
+    sunday.setDate(diff);
+    sunday.setHours(0, 0, 0, 0);
+
+    const saturday = new Date(sunday);
+    saturday.setDate(sunday.getDate() + 6);
+
+    const formatDate = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+
+    return `${formatDate(sunday)} - ${formatDate(saturday)}`;
+  };
 
   const groupPostsByDate = (posts: Post[]) => {
     const today = new Date();
-    const groups: { [key: string]: Post[] } = {
-      'Today': [],
-      'Yesterday': [],
-      'Last Week': []
-    };
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const lastWeekStart = new Date(today);
+    lastWeekStart.setDate(today.getDate() - 7);
+
+    const groups: { [key: string]: Post[] } = {};
+    const groupOrder: string[] = [];
 
     posts.forEach(post => {
       const postDate = new Date(post.createdAt);
+      postDate.setHours(0, 0, 0, 0);
+
       const diffDays = Math.floor((today.getTime() - postDate.getTime()) / (1000 * 60 * 60 * 24));
-      
+
+      let categoryName: string;
+
       if (diffDays === 0) {
-        groups['Today'].push(post);
+        categoryName = 'Today';
       } else if (diffDays === 1) {
-        groups['Yesterday'].push(post);
+        categoryName = 'Yesterday';
       } else if (diffDays <= 7) {
-        groups['Last Week'].push(post);
+        categoryName = 'Last Week';
+      } else {
+        categoryName = getWeekRange(postDate);
       }
+
+      if (!groups[categoryName]) {
+        groups[categoryName] = [];
+        groupOrder.push(categoryName);
+      }
+
+      groups[categoryName].push(post);
     });
 
-    return groups;
+    const orderedGroups: { [key: string]: Post[] } = {};
+    groupOrder.forEach(category => {
+      orderedGroups[category] = groups[category];
+    });
+
+    return orderedGroups;
   };
+
+  const filteredPosts = searchTerm
+    ? posts.filter(post =>
+      post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.details.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    : posts;
 
   const groupedPosts = groupPostsByDate(filteredPosts);
 
@@ -119,7 +174,7 @@ export default function PostsList({
     const date = new Date(dateString);
     const now = new Date();
     const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     const diffHours = Math.floor(diffMinutes / 60);
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -135,7 +190,6 @@ export default function PostsList({
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Header with Toggle and Search */}
       <div style={{
         padding: '12px',
         borderBottom: '1px solid #e5e7eb'
@@ -146,7 +200,7 @@ export default function PostsList({
           gap: '8px',
           marginBottom: '12px'
         }}>
-          <button 
+          <button
             onClick={onToggle}
             style={{
               background: 'none',
@@ -162,9 +216,9 @@ export default function PostsList({
             Unread | Updated | Unresolved | Following
           </span>
         </div>
-        
-        <button 
-          onClick={() => router.push(`/Kambaz/Courses/${courseId}/Pazza/New`)}
+
+        <button
+          onClick={() => router.push(`/Courses/${courseId}/Pazza/New`)}
           style={{
             width: '100%',
             backgroundColor: '#2563eb',
@@ -181,7 +235,7 @@ export default function PostsList({
         >
           + New Post
         </button>
-        
+
         <input
           type="text"
           placeholder="Search posts..."
@@ -218,16 +272,27 @@ export default function PostsList({
           Object.entries(groupedPosts).map(([category, categoryPosts]) => (
             categoryPosts.length > 0 && (
               <div key={category} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                <div style={{
-                  backgroundColor: '#f3f4f6',
-                  padding: '8px 12px',
-                  fontWeight: '600',
-                  fontSize: '14px',
-                  color: '#374151'
-                }}>
-                  {category}
+                <div
+                  onClick={() => toggleCategory(category)}
+                  style={{
+                    backgroundColor: '#f3f4f6',
+                    padding: '8px 12px',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <span style={{ fontSize: '12px' }}>
+                    {expandedCategories.has(category) ? '▼' : '▶'}
+                  </span>
+                  {category} ({categoryPosts.length})
                 </div>
-                {categoryPosts.map(post => (
+
+                {expandedCategories.has(category) && categoryPosts.map(post => (
                   <div
                     key={post._id}
                     onClick={() => onPostSelect(post)}
@@ -248,14 +313,13 @@ export default function PostsList({
                       }
                     }}
                   >
-                    <div style={{ 
-                      fontWeight: '600', 
+                    <div style={{
+                      fontWeight: '600',
                       fontSize: '14px',
                       marginBottom: '4px'
                     }}>
                       {post.summary}
                     </div>
-                    
                     <div style={{
                       fontSize: '14px',
                       color: '#6b7280',
@@ -268,7 +332,6 @@ export default function PostsList({
                     }}>
                       {post.details}
                     </div>
-                    
                     <div style={{ fontSize: '12px', color: '#9ca3af' }}>
                       {formatTime(post.createdAt)}
                     </div>
