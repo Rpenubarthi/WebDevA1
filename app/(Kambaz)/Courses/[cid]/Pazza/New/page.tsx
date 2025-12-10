@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import PazzaNavBar from '../PazzaNavBar';
 
-export default function NewPostPage({ params }: { params: { cid: string } }) {
+export default function NewPostPage({ params }: { params: Promise<{ cid: string }> }) {
   const router = useRouter();
+  const { cid } = use(params); // Unwrap the Promise
+  
   const [postType, setPostType] = useState<'question' | 'note'>('question');
   const [postTo, setPostTo] = useState<'entire_class' | 'individual'>('entire_class');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
@@ -14,10 +16,8 @@ export default function NewPostPage({ params }: { params: { cid: string } }) {
   const [details, setDetails] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Available folders (TODO: fetch from backend)
   const availableFolders = ['hw1', 'hw2', 'hw3', 'project', 'exam', 'logistics', 'other', 'office_hours'];
   
-  // Available users (TODO: fetch from backend)
   const availableUsers = [
     { id: '1', name: 'Instructors', role: 'instructor' },
     { id: '2', name: 'John Doe', role: 'student' },
@@ -72,7 +72,7 @@ export default function NewPostPage({ params }: { params: { cid: string } }) {
     }
 
     const postData = {
-      courseId: params.cid,
+      courseId: cid, // Use the unwrapped cid
       type: postType,
       summary,
       details,
@@ -94,14 +94,14 @@ export default function NewPostPage({ params }: { params: { cid: string } }) {
       console.log('Creating post:', postData);
       
       // Navigate back to main Pazza page
-      router.push(`/Kambaz/Courses/${params.cid}/Pazza`);
+      router.push(`/Kambaz/Courses/${cid}/Pazza`);
     } catch (error) {
       console.error('Error creating post:', error);
     }
   };
 
   const handleCancel = () => {
-    router.push(`/Kambaz/Courses/${params.cid}/Pazza`);
+    router.push(`/Kambaz/Courses/${cid}/Pazza`);
   };
 
   return (
@@ -111,8 +111,9 @@ export default function NewPostPage({ params }: { params: { cid: string } }) {
       height: '100vh',
       width: '100%'
     }}>
-      <PazzaNavBar courseId={params.cid} />
+      <PazzaNavBar courseId={cid} />
       
+      {/* ... rest of your JSX stays the same ... */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
@@ -362,9 +363,6 @@ export default function NewPostPage({ params }: { params: { cid: string } }) {
                 {errors.details}
               </div>
             )}
-            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-              Required. You can use a Rich Text Editor component here (install react-quill or similar)
-            </div>
           </div>
 
           {/* Action Buttons */}

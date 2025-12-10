@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import * as PazzaClient from './client';
 
 interface Post {
   _id: string;
@@ -30,33 +31,63 @@ export default function PostsList({
   const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // TODO: Get current user from auth context
+  const currentUser = { id: '1', role: 'student' };
 
   useEffect(() => {
-    // Dummy data for now
-    setPosts([
-      {
-        _id: '1',
-        type: 'question',
-        summary: 'How do I set up MongoDB?',
-        details: 'I need help configuring MongoDB for my project...',
-        authorRole: 'student',
-        createdAt: new Date().toISOString()
-      },
-      {
-        _id: '2',
-        type: 'note',
-        summary: 'Office hours today at 3pm',
-        details: 'Remember office hours are in room 123...',
-        authorRole: 'instructor',
-        createdAt: new Date(Date.now() - 86400000).toISOString()
-      }
-    ]);
+    console.log('PostsList mounted with courseId:', courseId, 'folder:', selectedFolder);
+    fetchPosts();
   }, [courseId, selectedFolder]);
 
-  const filteredPosts = posts.filter(post => 
-    post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.details.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching posts for:', {
+        courseId,
+        userId: currentUser.id,
+        userRole: currentUser.role,
+        folder: selectedFolder
+      });
+
+      const fetchedPosts = await PazzaClient.getPostsForCourse(
+        courseId,
+        currentUser.id,
+        currentUser.role,
+        selectedFolder === 'all' ? undefined : selectedFolder,
+        searchTerm || undefined
+      );
+      
+      console.log('Fetched posts:', fetchedPosts);
+      setPosts(fetchedPosts);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error);
+      console.error('Error details:', error.response?.data);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm) {
+        fetchPosts();
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const filteredPosts = searchTerm 
+    ? posts 
+    : posts.filter(post => 
+        post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.details.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
   const groupPostsByDate = (posts: Post[]) => {
     const today = new Date();
@@ -171,68 +202,82 @@ export default function PostsList({
         flex: 1,
         overflowY: 'auto'
       }}>
-        {Object.entries(groupedPosts).map(([category, categoryPosts]) => (
-          categoryPosts.length > 0 && (
-            <div key={category} style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{
-                backgroundColor: '#f3f4f6',
-                padding: '8px 12px',
-                fontWeight: '600',
-                fontSize: '14px',
-                color: '#374151'
-              }}>
-                {category}
-              </div>
-              {categoryPosts.map(post => (
-                <div
-                  key={post._id}
-                  onClick={() => onPostSelect(post)}
-                  style={{
-                    padding: '12px',
-                    borderBottom: '1px solid #f3f4f6',
-                    cursor: 'pointer',
-                    backgroundColor: selectedPost?._id === post._id ? '#dbeafe' : 'white'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedPost?._id !== post._id) {
-                      e.currentTarget.style.backgroundColor = '#f9fafb';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedPost?._id !== post._id) {
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }
-                  }}
-                >
-                  <div style={{ 
-                    fontWeight: '600', 
-                    fontSize: '14px',
-                    marginBottom: '4px'
-                  }}>
-                    {post.summary}
-                  </div>
-                  
-                  <div style={{
-                    fontSize: '14px',
-                    color: '#6b7280',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    marginBottom: '8px'
-                  }}>
-                    {post.details}
-                  </div>
-                  
-                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-                    {formatTime(post.createdAt)}
-                  </div>
+        {loading ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+            Loading posts...
+          </div>
+        ) : error ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#dc2626' }}>
+            Error: {error}
+          </div>
+        ) : posts.length === 0 ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>
+            No posts yet. Be the first to post!
+          </div>
+        ) : (
+          Object.entries(groupedPosts).map(([category, categoryPosts]) => (
+            categoryPosts.length > 0 && (
+              <div key={category} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{
+                  backgroundColor: '#f3f4f6',
+                  padding: '8px 12px',
+                  fontWeight: '600',
+                  fontSize: '14px',
+                  color: '#374151'
+                }}>
+                  {category}
                 </div>
-              ))}
-            </div>
-          )
-        ))}
+                {categoryPosts.map(post => (
+                  <div
+                    key={post._id}
+                    onClick={() => onPostSelect(post)}
+                    style={{
+                      padding: '12px',
+                      borderBottom: '1px solid #f3f4f6',
+                      cursor: 'pointer',
+                      backgroundColor: selectedPost?._id === post._id ? '#dbeafe' : 'white'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (selectedPost?._id !== post._id) {
+                        e.currentTarget.style.backgroundColor = '#f9fafb';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (selectedPost?._id !== post._id) {
+                        e.currentTarget.style.backgroundColor = 'white';
+                      }
+                    }}
+                  >
+                    <div style={{ 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      marginBottom: '4px'
+                    }}>
+                      {post.summary}
+                    </div>
+                    
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#6b7280',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      marginBottom: '8px'
+                    }}>
+                      {post.details}
+                    </div>
+                    
+                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                      {formatTime(post.createdAt)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ))
+        )}
       </div>
     </div>
   );

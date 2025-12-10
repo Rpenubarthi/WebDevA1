@@ -30,7 +30,6 @@ export default function PazzaNavBar({ courseId }: { courseId: string }) {
         <span style={{ fontWeight: 'bold', fontSize: '24px' }}>pazza</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span style={{ fontWeight: '600' }}>{courseName}</span>
-          <span style={{ color: '#93c5fd', fontSize: '14px' }}>▼</span>
         </div>
       </div>
       

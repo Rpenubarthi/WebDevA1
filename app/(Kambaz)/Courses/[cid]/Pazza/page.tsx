@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import PazzaNavBar from './PazzaNavBar';
 import FolderFilters from './FolderFilters';
 import PostsList from './CourseNavigationSidebar';
 import PostScreen from './PostsScreen';
 
-export default function PazzaPage({ params }: { params: { cid: string } }) {
+export default function PazzaPage({ params }: { params: Promise<{ cid: string }> }) {
+  const { cid } = use(params); 
   const [selectedFolder, setSelectedFolder] = useState('hw1');
   const [selectedPost, setSelectedPost] = useState(null);
   const [showPostsList, setShowPostsList] = useState(true);
@@ -18,13 +19,13 @@ export default function PazzaPage({ params }: { params: { cid: string } }) {
       height: '100vh'
     }}>
       {/* Fixed Navigation Bar */}
-      <PazzaNavBar courseId={params.cid} />
+      <PazzaNavBar courseId={cid} />
       
       {/* Fixed Folder Filters */}
       <FolderFilters 
         selectedFolder={selectedFolder}
         onFolderSelect={setSelectedFolder}
-        courseId={params.cid}
+        courseId={cid}
       />
       
       {/* Main Content: Posts List + Post Screen */}
@@ -36,7 +37,7 @@ export default function PazzaPage({ params }: { params: { cid: string } }) {
         {/* Left Sidebar - Posts List */}
         {showPostsList && (
           <PostsList 
-            courseId={params.cid}
+            courseId={cid}
             selectedFolder={selectedFolder}
             selectedPost={selectedPost}
             onPostSelect={setSelectedPost}
@@ -46,7 +47,7 @@ export default function PazzaPage({ params }: { params: { cid: string } }) {
         
         {/* Right Side - Post Screen */}
         <PostScreen 
-          courseId={params.cid}
+          courseId={cid}
           selectedPost={selectedPost}
           showToggle={!showPostsList}
           onToggle={() => setShowPostsList(true)}
