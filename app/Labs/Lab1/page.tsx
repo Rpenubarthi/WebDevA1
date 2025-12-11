@@ -4,7 +4,7 @@ export default function Lab1() {
         <div id="wd-lab1">
             <h2>Lab 1</h2>
             <h3>Ruthvik Penubarthi Section 01</h3>
-            <a href="https://github.com/Rpenubarthi/WebDevA1">Link to Repository</a>
+            <a href="https://github.com/Rpenubarthi/WebDevA1/tree/A1">Link to Repository</a>
             <h3>HTML Examples</h3>
             <div id="wd-h-tag">
                 <h4>Heading Tags</h4>
@@ -170,30 +170,6 @@ export default function Lab1() {
                         defaultValue="Wonderland"
                         title="The last name"
                         id="wd-text-fields-last-name" />
-                    <h4>Other HTML field types</h4>
-
-                    <label htmlFor="wd-text-fields-email"> Email: </label>
-                    <input type="email"
-                        placeholder="jdoe@somewhere.com"
-                        id="wd-text-fields-email" /><br />
-
-                    <label htmlFor="wd-text-fields-salary-start"> Starting salary:</label>
-                    <input type="number"
-                        defaultValue="100000"
-                        placeholder="1000"
-                        id="wd-text-fields-salary-start" /><br />
-
-                    <label htmlFor="wd-text-fields-rating"> Rating: </label>
-                    <input type="range"
-                        defaultValue="4"
-                        max="5"
-                        placeholder="Doe"
-                        id="wd-text-fields-rating" /><br />
-
-                    <label htmlFor="wd-text-fields-dob"> Date of birth: </label>
-                    <input type="date"
-                        defaultValue="2000-01-21"
-                        id="wd-text-fields-dob" /><br />
                 </form>
                 <h5>Text boxes</h5>
                 <label>Biography:</label><br />
@@ -239,22 +215,45 @@ export default function Lab1() {
 
                 <h5>Select one</h5>
                 <label htmlFor="wd-select-one-genre"> Favorite movie genre: </label><br />
-                <select id="wd-select-one-genre">
+                <select id="wd-select-one-genre" defaultValue="SCIFI">
                     <option value="COMEDY">Comedy</option>
                     <option value="DRAMA">Drama</option>
-                    <option selected value="SCIFI">
-                        Science Fiction</option>
+                    <option value="SCIFI">Science Fiction</option>
                     <option value="FANTASY">Fantasy</option>
                 </select>
 
                 <h5>Select many</h5>
                 <label htmlFor="wd-select-many-genre"> Favorite movie genres: </label><br />
-                <select multiple id="wd-select-many-genre">
-                    <option value="COMEDY" selected> Comedy          </option>
-                    <option value="DRAMA">           Drama           </option>
-                    <option value="SCIFI" selected> Science Fiction </option>
-                    <option value="FANTASY">         Fantasy         </option>
+                <select multiple id="wd-select-many-genre" defaultValue={["COMEDY", "SCIFI"]}>
+                    <option value="COMEDY">Comedy</option>
+                    <option value="DRAMA">Drama</option>
+                    <option value="SCIFI">Science Fiction</option>
+                    <option value="FANTASY">Fantasy</option>
                 </select>
+                <h4>Other HTML field types</h4>
+
+                <label htmlFor="wd-text-fields-email"> Email: </label>
+                <input type="email"
+                    placeholder="jdoe@somewhere.com"
+                    id="wd-text-fields-email" /><br />
+
+                <label htmlFor="wd-text-fields-salary-start"> Starting salary:</label>
+                <input type="number"
+                    defaultValue="100000"
+                    placeholder="1000"
+                    id="wd-text-fields-salary-start" /><br />
+
+                <label htmlFor="wd-text-fields-rating"> Rating: </label>
+                <input type="range"
+                    defaultValue="4"
+                    max="5"
+                    placeholder="Doe"
+                    id="wd-text-fields-rating" /><br />
+
+                <label htmlFor="wd-text-fields-dob"> Date of birth: </label>
+                <input type="date"
+                    defaultValue="2000-01-21"
+                    id="wd-text-fields-dob" /><br />
                 <h4>Anchor tag</h4>
                 Please
                 <a href="https://www.lipsum.com" id="wd-lipsum">click here</a>
