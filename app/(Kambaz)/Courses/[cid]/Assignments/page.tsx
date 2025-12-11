@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Assignments() {
     return (
@@ -22,3 +22,4 @@ export default function Assignments() {
         </div>
     );
 }
+
