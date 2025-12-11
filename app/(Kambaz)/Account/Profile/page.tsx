@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 export default function Profile() {
     return (
         <div id="wd-profile-screen">
@@ -18,4 +19,3 @@ export default function Profile() {
         </div>
     );
 }
-
