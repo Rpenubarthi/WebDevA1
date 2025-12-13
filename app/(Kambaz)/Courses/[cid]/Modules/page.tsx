@@ -1,4 +1,5 @@
 "use client"
+/* eslint-disable */
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import * as db from "../../../Database";
