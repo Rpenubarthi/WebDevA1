@@ -2,13 +2,12 @@
 /* eslint-disable */
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import * as db from "../../../Database";
 import { FormControl, ListGroup, ListGroupItem } from "react-bootstrap";
 import ModulesControls from "./ModulesControls";
 import { BsGripVertical } from "react-icons/bs";
 import LessonControlButtons from "./LessonControlButtons";
 import ModuleControlButtons from "./ModuleControlButtons";
-import { v4 as uuidv4 } from "uuid";
+
 import { addModule, editModule, updateModule, deleteModule }
     from "./reducer";
 import { useSelector, useDispatch } from "react-redux";
@@ -62,6 +61,8 @@ export default function Modules() {
                                             <BsGripVertical className="me-2 fs-3" /> {lesson.name} <LessonControlButtons /> </ListGroupItem>
                                     ))}</ListGroup>)}</ListGroupItem>))}</ListGroup>
         </div>
+
+
     );
 }
 
